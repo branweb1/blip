@@ -1,0 +1,11 @@
+{
+  "name": "blip",
+  "description": "Speed reader extension",
+  "version": "0.1",
+  "manifest_version": 3,
+  "permissions": [ "activeTab", "storage" ],
+  "action": {
+    "default_icon": "hello_extension.png",
+    "default_popup": "index.html"
+  }
+}
