@@ -1,16 +1,12 @@
-
-// in cb
-// call render(buildWord(words[count]))
-// but words and count will need to go in global state
-// as will offset, which is how many unitless spaces is the red letter from the left edge
+// state
+// offset is how many characters to the left the red letter is
+// so if e was the red letter below
 // 0 1 2 3 4
 // a b c d e
-// if e is red letter, offset is 3
-// to get that in pixels, we multiply by pixel width of a single character
-// to align letter with vertical bars, we use that to add a padding char - the actual chars that come before the red letter. So
-//   is effectively pixel width of single char * (offset - actual chars) 
-
-// state
+// the offset would be 3
+// we multiply this by the width of a character to get the
+// position of the little vertical bars. We also use it
+// to pad the word so that it aligns to the vertical bars.
 const APPSTATE = {
   count: 0,
   words: [],
@@ -20,102 +16,7 @@ const APPSTATE = {
   intervalId: null
 }
 
-function calculateRedIndex(word) {
-  let redIndex;
-  const wordlen = word.length;
-  if (wordlen === 1) {
-    redIndex = 0
-  } else if (wordlen <= 3) {
-    redIndex = 1
-  } else if (wordlen < 8) {
-    redIndex = 2
-  } else {
-    redIndex = 3
-  }
-  
-  return redIndex
-}
-
-function leftPad(word, padchar, n) {
-  let padding = ''
-  for (let i = 0; i < n; i++) {
-    padding += padchar
-  }
-  return padding + word
-}
-
-function buildWord(word) {
-  let index = calculateRedIndex(word)
-  const p1 = leftPad(word.substring(0, index), ' ', APPSTATE.offset-index)
-  const p2 = `<span class="red-letter">${word.charAt(index)}</span>`
-  const p3 = word.substring(index+1)
-  return p1 + p2 + p3
-}
-
-function calculateInterval() {
-  return Math.floor(60 * 1000 / APPSTATE.wpm)
-}
-
-function render(word) {
-  const display = document.getElementById("word")
-  const wpm = document.getElementById("wpm")
-  display.innerHTML = word
-  wpm.innerHTML = `${APPSTATE.wpm} wpm`
-}
-
-function renderInitial() {
-  const width = 500 // TODO replace with dynamic thing.
-  const display = document.getElementById("word")
-  display.style.visibility = 'hidden'
-  display.innerHTML = buildWord("dummyword")
-  const charWidth = display.querySelector('span').getBoundingClientRect().width
-  APPSTATE.offset = Math.floor((width / 3)  / charWidth)
-  const pixelOffset = (charWidth / 2) + (charWidth * APPSTATE.offset)
-  Array.from(document.querySelectorAll(".vert-bar")).forEach(bar => {
-    bar.style.width = `${pixelOffset}px`
-  })
-  display.style.visibility = 'initial'
-  render(' ')
-}
-
-async function parse(url) {
-  const { content } = await Mercury.parse(url, { contentType: 'text'} )
-  return content  
-}
-
-async function start() {
-    // TODO handle error
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    await parse(tabs[0].url).then(text => {
-      APPSTATE.words = text.split(" ")
-      clearInterval(APPSTATE.intervalId)
-      APPSTATE.intervalId = setInterval(blip, calculateInterval())
-    })
-  })
-}
-
-function control(e) {
-  e.preventDefault()
- 
-  const isInitial = e.currentTarget.textContent === 'start'
-
-  if (isInitial) {
-    APPSTATE.paused = false
-    e.currentTarget.innerHTML = 'pause'
-    start()
-  } else if (APPSTATE.paused) {
-    clearInterval(APPSTATE.intervalId)
-    APPSTATE.intervalId = setInterval(blip, calculateInterval())
-    APPSTATE.paused = false
-    e.currentTarget.innerHTML = 'pause'
-  } else {
-    clearInterval(APPSTATE.intervalId)
-    APPSTATE.intervalId = null
-    APPSTATE.paused = true
-    e.currentTarget.innerHTML = 'resume'
-  }
-}
-
+// helpers
 function calculateDelay(word) {
   if (word.length === 0) return -1
   const lastLetter = word[word.length-1]
@@ -146,6 +47,48 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+function calculateRedIndex(word) {
+  let redIndex;
+  const wordlen = word.length;
+  if (wordlen === 1) {
+    redIndex = 0
+  } else if (wordlen <= 3) {
+    redIndex = 1
+  } else if (wordlen < 8) {
+    redIndex = 2
+  } else {
+    redIndex = 3
+  }
+  
+  return redIndex
+}
+
+function leftPad(word, padchar, n) {
+  let padding = ''
+  for (let i = 0; i < n; i++) {
+    padding += padchar
+  }
+  return padding + word
+}
+
+function buildWord(word) {
+  let index = calculateRedIndex(word)
+  // we want the red letter to align with the vertical bars. We get their
+  // position by doing offset * width of character. So if the word was
+  // foobar, index would be 2. We subtract that from the offset to account
+  // for the width of the two characters ahead of the red letter (in this
+  // case f and o).
+  const p1 = leftPad(word.substring(0, index), ' ', APPSTATE.offset-index)
+  const p2 = `<span class="red-letter">${word.charAt(index)}</span>`
+  const p3 = word.substring(index+1)
+  return p1 + p2 + p3
+}
+
+function calculateInterval() {
+  return Math.floor(60 * 1000 / APPSTATE.wpm)
+}
+
+// the main thing
 async function blip() {
   if (APPSTATE.count > APPSTATE.words.length-1) {
     clearInterval(APPSTATE.intervalId)
@@ -171,6 +114,69 @@ async function blip() {
   }
 
   APPSTATE.count++  
+}
+
+// render stuff
+function render(word) {
+  const display = document.getElementById("word")
+  const wpm = document.getElementById("wpm")
+  display.innerHTML = word
+  wpm.innerHTML = `${APPSTATE.wpm} wpm`
+}
+
+function renderInitial() {
+  const width = 500 // TODO replace with dynamic thing.
+  const display = document.getElementById("word")
+  display.style.visibility = 'hidden'
+  display.innerHTML = buildWord("dummyword")
+  const charWidth = display.querySelector('span').getBoundingClientRect().width
+  APPSTATE.offset = Math.floor((width / 3)  / charWidth)
+  const pixelOffset = (charWidth / 2) + (charWidth * APPSTATE.offset)
+  Array.from(document.querySelectorAll(".vert-bar")).forEach(bar => {
+    bar.style.width = `${pixelOffset}px`
+  })
+  display.style.visibility = 'initial'
+  render(' ')
+}
+
+// content fetching
+async function parse(url) {
+  const { content } = await Mercury.parse(url, { contentType: 'text'} )
+  return content  
+}
+
+async function start() {
+    // TODO handle error
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    await parse(tabs[0].url).then(text => {
+      APPSTATE.words = text.split(" ")
+      clearInterval(APPSTATE.intervalId)
+      APPSTATE.intervalId = setInterval(blip, calculateInterval())
+    })
+  })
+}
+
+// event handlers
+function control(e) {
+  e.preventDefault()
+ 
+  const isInitial = e.currentTarget.textContent === 'start'
+
+  if (isInitial) {
+    APPSTATE.paused = false
+    e.currentTarget.innerHTML = 'pause'
+    start()
+  } else if (APPSTATE.paused) {
+    clearInterval(APPSTATE.intervalId)
+    APPSTATE.intervalId = setInterval(blip, calculateInterval())
+    APPSTATE.paused = false
+    e.currentTarget.innerHTML = 'pause'
+  } else {
+    clearInterval(APPSTATE.intervalId)
+    APPSTATE.intervalId = null
+    APPSTATE.paused = true
+    e.currentTarget.innerHTML = 'resume'
+  }
 }
 
 function adjustSpeed(amount) {
