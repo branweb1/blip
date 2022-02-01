@@ -1,3 +1,12 @@
+// TODO icon buttons
+// TODO tufte default colors
+// TODO allow configuration of colors
+// TODO save progress in local storage so we can start where we left off
+// TODO shorten delays there are a bit too long
+
+// TODO put weird inputs here
+
+
 // state
 // offset is how many characters to the left the red letter is
 // so if e was the red letter below
@@ -27,13 +36,21 @@ function calculateDelay(word) {
     case '!':
     case '?':
     case '.': {
-       newInterval = interval * 2
+       newInterval = Math.floor(interval * 1.5)
     }
     break;
     // fallthrough intentional
     case ':':
     case ',': {
-      newInterval = Math.floor(interval * 1.5)
+      newInterval = Math.floor(interval * 1.2)
+    }
+    break;
+    // fallthrough intentional
+    case '"':
+    case '\'': {
+      if (/[\.\?\!]/.test(word[word.length-2])) {
+        newInterval = Math.floor(interval * 1.5)        
+      }
     }
     break;
     default: {
@@ -97,9 +114,15 @@ async function blip() {
 
   const currentWord = APPSTATE.words[APPSTATE.count]
 
+  // skip empty words
+  if (currentWord === '') {
+    APPSTATE.count++
+    return
+  }
+
   render(buildWord(currentWord))
 
-  const delay = calculateDelay(word)
+  const delay = calculateDelay(currentWord)
 
   if (delay > 0) {
     clearInterval(APPSTATE.intervalId)
@@ -142,21 +165,36 @@ function renderInitial() {
 // content fetching
 async function parse(url) {
   const { content } = await Mercury.parse(url, { contentType: 'text'} )
-  return content  
+  // split on regex and then don't render string
+//  APPSTATE.words
+  const parsedWords = []
+  const words = content.split(" ").forEach(word => {
+    const periodIndex = word.indexOf('.')
+    // not 0 or negative one since we don't want to
+    // split up something like U.S. Grant either
+    if (periodIndex > 1) {
+      const firstWord = word.substring(0, periodIndex+1)
+      const secondWord = word.substring(periodIndex+1)
+      parsedWords.push(firstWord)
+      parsedWords.push(secondWord)
+    } else {
+      parsedWords.push(word)
+    }
+  })
+
+  APPSTATE.words = parsedWords
+  console.log('content', content)
 }
 
 async function start() {
-    // TODO handle error
+  // TODO handle error
   chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    await parse(tabs[0].url).then(text => {
-      APPSTATE.words = text.split(" ")
-      clearInterval(APPSTATE.intervalId)
-      APPSTATE.intervalId = setInterval(blip, calculateInterval())
-    })
+    await parse(tabs[0].url)
+    clearInterval(APPSTATE.intervalId)
+    APPSTATE.intervalId = setInterval(blip, calculateInterval())
   })
 }
 
-// event handlers
 function control(e) {
   e.preventDefault()
  
