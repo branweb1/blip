@@ -108,10 +108,6 @@ function calculateInterval() {
 
 // the main thing
 async function blip() {
-  if (APPSTATE.count > 0) {
-    clearInterval(APPSTATE.intervalId)
-    return
-  }
   if (APPSTATE.count > APPSTATE.words.length-1) {
     clearInterval(APPSTATE.intervalId)
     return
@@ -175,16 +171,22 @@ async function parse(url) {
   const parsedWords = []
   const words = content.split(" ").forEach(word => {
     const periodIndex = word.indexOf('.')
+    let cleanedWords = []
     // not 0 or negative one since we don't want to
     // split up something like U.S. Grant either
     if (periodIndex > 1) {
       const firstWord = word.substring(0, periodIndex+1)
       const secondWord = word.substring(periodIndex+1)
-      parsedWords.push(firstWord)
-      parsedWords.push(secondWord)
+      cleanedWords.push(firstWord)
+      cleanedWords.push(secondWord)
     } else {
-      parsedWords.push(word)
+      cleanedWords.push(word)
     }
+
+    // sometimes content comes with these characters inside
+    cleanedWords = cleanedWords.map(word => word.replace(/[\n\t\s]+/, ''))
+
+    cleanedWords.forEach(word => parsedWords.push(word))
   })
 
   APPSTATE.words = parsedWords
