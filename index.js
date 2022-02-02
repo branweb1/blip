@@ -89,6 +89,7 @@ function leftPad(word, padchar, n) {
 }
 
 function buildWord(word) {
+  if (!word) return '  '
   let index = calculateRedIndex(word)
   // we want the red letter to align with the vertical bars. We get their
   // position by doing offset * width of character. So if the word was
@@ -107,6 +108,10 @@ function calculateInterval() {
 
 // the main thing
 async function blip() {
+  if (APPSTATE.count > 0) {
+    clearInterval(APPSTATE.intervalId)
+    return
+  }
   if (APPSTATE.count > APPSTATE.words.length-1) {
     clearInterval(APPSTATE.intervalId)
     return
@@ -197,23 +202,30 @@ async function start() {
 
 function control(e) {
   e.preventDefault()
- 
-  const isInitial = e.currentTarget.textContent === 'start'
+
+  const isInitial = e.currentTarget.dataset.initial === 'true'
+
+  // TODO handle error
+  // TODO is button always target of click?
+  const [img] = Array.from(e.currentTarget.children)
 
   if (isInitial) {
     APPSTATE.paused = false
-    e.currentTarget.innerHTML = 'pause'
+    e.currentTarget.dataset.initial = 'false'
+    img.setAttribute('src', 'pause.svg')
     start()
   } else if (APPSTATE.paused) {
     clearInterval(APPSTATE.intervalId)
     APPSTATE.intervalId = setInterval(blip, calculateInterval())
     APPSTATE.paused = false
-    e.currentTarget.innerHTML = 'pause'
+    img.setAttribute('src', 'pause.svg')
+//    e.currentTarget.innerHTML = 'pause'
   } else {
     clearInterval(APPSTATE.intervalId)
     APPSTATE.intervalId = null
     APPSTATE.paused = true
-    e.currentTarget.innerHTML = 'resume'
+    img.setAttribute('src', 'play.svg')
+//    e.currentTarget.innerHTML = 'resume'
   }
 }
 
@@ -245,10 +257,29 @@ function adjustSpeed(amount) {
   }
 }
 
+function handleHover(iconFile) {
+  return e => {
+    const [img] = Array.from(e.currentTarget.children)
+    img.setAttribute('src', iconFile)    
+  }
+}
+
+function handleControlHover(playIcon, pauseIcon) {
+  return e => {
+    handleHover(APPSTATE.paused ? playIcon : pauseIcon)(e)
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const incButton = document.getElementById('inc-wpm')
   const decButton = document.getElementById('dec-wpm')
   const controlButton = document.getElementById('control')
+  incButton.addEventListener('mouseover', handleHover('incr-hover.svg'))
+  incButton.addEventListener('mouseout', handleHover('incr.svg'))
+  decButton.addEventListener('mouseover', handleHover('decr-hover.svg'))
+  decButton.addEventListener('mouseout', handleHover('decr.svg'))
+  controlButton.addEventListener('mouseover', handleControlHover('play-hover.svg', 'pause-hover.svg'))
+  controlButton.addEventListener('mouseout', handleControlHover('play.svg', 'pause.svg'))
   incButton.addEventListener('click', adjustSpeed(10))
   decButton.addEventListener('click', adjustSpeed(-10))
   controlButton.addEventListener('click', control)
