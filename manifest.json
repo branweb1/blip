@@ -5,7 +5,7 @@
   "manifest_version": 3,
   "permissions": [ "activeTab", "storage" ],
   "action": {
-    "default_icon": "heartbeat.png",
+    "default_icon": "icons/heartbeat.png",
     "default_popup": "index.html"
   }
 }

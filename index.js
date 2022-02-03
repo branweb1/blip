@@ -212,19 +212,19 @@ function control(e) {
   if (isInitial) {
     APPSTATE.paused = false
     e.currentTarget.dataset.initial = 'false'
-    img.setAttribute('src', 'pause.svg')
+    img.setAttribute('src', 'icons/pause.svg')
     start()
   } else if (APPSTATE.paused) {
     clearInterval(APPSTATE.intervalId)
     APPSTATE.intervalId = setInterval(blip, calculateInterval())
     APPSTATE.paused = false
-    img.setAttribute('src', 'pause.svg')
+    img.setAttribute('src', 'icons/pause.svg')
 //    e.currentTarget.innerHTML = 'pause'
   } else {
     clearInterval(APPSTATE.intervalId)
     APPSTATE.intervalId = null
     APPSTATE.paused = true
-    img.setAttribute('src', 'play.svg')
+    img.setAttribute('src', 'icons/play.svg')
 //    e.currentTarget.innerHTML = 'resume'
   }
 }
@@ -260,7 +260,7 @@ function adjustSpeed(amount) {
 function handleHover(iconFile) {
   return e => {
     const [img] = Array.from(e.currentTarget.children)
-    img.setAttribute('src', iconFile)    
+    img.setAttribute('src', `icons/${iconFile}`)
   }
 }
 
