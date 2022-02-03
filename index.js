@@ -165,12 +165,12 @@ function renderInitial() {
 async function parse(url) {
   const { content } = await Mercury.parse(url, { contentType: 'text'} )
   // split on regex and then don't render string
-//  APPSTATE.words
+  //  APPSTATE.words
   const parsedWords = []
   const words = content.split(" ").forEach(word => {
     const periodIndex = word.indexOf('.')
     let cleanedWords = []
-    // not 0 or negative one since we don't want to
+    // not 0 or -1 since we don't want to
     // split up something like U.S. Grant either
     if (periodIndex > 1) {
       const firstWord = word.substring(0, periodIndex+1)
@@ -219,13 +219,11 @@ function control(e) {
     APPSTATE.intervalId = setInterval(blip, calculateInterval())
     APPSTATE.paused = false
     img.setAttribute('src', 'icons/pause.svg')
-//    e.currentTarget.innerHTML = 'pause'
   } else {
     clearInterval(APPSTATE.intervalId)
     APPSTATE.intervalId = null
     APPSTATE.paused = true
     img.setAttribute('src', 'icons/play.svg')
-//    e.currentTarget.innerHTML = 'resume'
   }
 }
 
