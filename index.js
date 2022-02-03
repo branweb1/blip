@@ -1,11 +1,9 @@
-// TODO icon buttons
-// TODO tufte default colors
 // TODO allow configuration of colors
+// TODO allow users to set a default wpm
 // TODO save progress in local storage so we can start where we left off
-// TODO shorten delays there are a bit too long
-
-// TODO put weird inputs here
-
+// TODO try against more inputs to find edge cases
+// TODO move from default popup to new window in center of screen
+// TODO add overlay to darken rest of screen
 
 // state
 // offset is how many characters to the left the red letter is
