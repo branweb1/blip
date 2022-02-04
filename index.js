@@ -19,7 +19,8 @@ const APPSTATE = {
   offset: 5,
   wpm: 320,
   paused: true,
-  intervalId: null
+  intervalId: null,
+  url: null
 }
 
 // helpers
@@ -192,11 +193,14 @@ async function parse(url) {
 
 async function start() {
   // TODO handle error
-  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-    await parse(tabs[0].url)
-    clearInterval(APPSTATE.intervalId)
-    APPSTATE.intervalId = setInterval(blip, calculateInterval())
-  })
+  await parse(APPSTATE.url)
+  clearInterval(APPSTATE.intervalId)
+  APPSTATE.intervalId = setInterval(blip, calculateInterval())
+//  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+//    await parse(tabs[0].url)
+//    clearInterval(APPSTATE.intervalId)
+//    APPSTATE.intervalId = setInterval(blip, calculateInterval())
+//  })
 }
 
 function control(e) {
@@ -280,10 +284,14 @@ document.addEventListener('DOMContentLoaded', () => {
   incButton.addEventListener('click', adjustSpeed(10))
   decButton.addEventListener('click', adjustSpeed(-10))
   controlButton.addEventListener('click', control)
-  chrome.storage.local.get('wpm', ( { wpm } ) => {
+  chrome.storage.local.get(['wpm', 'url'], ( { wpm, url } ) => {
     APPSTATE.wpm = wpm
+    APPSTATE.url = url
     renderInitial()
   })
 })
 
-
+// add background.js
+// inside, listen for ext icon click
+// on click, open window at center of screen
+// pass url of current page into the window
