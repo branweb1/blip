@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="reset.css">
+  <link rel="stylesheet" href="options.css">
+  <title>
+    Blip Options
+  </title>
+</head>
+<body>
+  <section>
+    <label>
+      Default words per minute (wpm)
+      <input
+        id="default-wpm"
+        type="number"
+        min="0"
+        max="1000"
+        step="10"
+        value="320"
+        name="default-wpm" />
+    </label>
+  </section>
+  <section id="status">&nbsp;</section>
+  <section>
+    <button id="save">Save</button>
+  </section>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,5 +1,4 @@
 // TODO allow configuration of colors
-// TODO allow users to set a default wpm
 // TODO save progress in local storage so we can start where we left off
 // TODO try against more inputs to find edge cases
 // TODO move from default popup to new window in center of screen
@@ -281,5 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
   incButton.addEventListener('click', adjustSpeed(10))
   decButton.addEventListener('click', adjustSpeed(-10))
   controlButton.addEventListener('click', control)
-  renderInitial()
+  chrome.storage.local.get('wpm', ( { wpm } ) => {
+    APPSTATE.wpm = wpm
+    renderInitial()
+  })
 })
+
+
