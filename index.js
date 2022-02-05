@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
   decButton.addEventListener('click', adjustSpeed(-10))
   controlButton.addEventListener('click', control)
   chrome.storage.local.get(['wpm', 'url'], ( { wpm, url } ) => {
-    APPSTATE.wpm = wpm
+    APPSTATE.wpm = wpm || 320
     APPSTATE.url = url
     renderInitial()
   })
