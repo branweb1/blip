@@ -1,7 +1,6 @@
 // TODO allow configuration of colors
 // TODO save progress in local storage so we can start where we left off
 // TODO try against more inputs to find edge cases
-// TODO move from default popup to new window in center of screen
 // TODO add overlay to darken rest of screen
 
 // state
@@ -147,12 +146,22 @@ function render(word) {
 }
 
 function renderInitial() {
-  const width = 500 // TODO replace with dynamic thing.
+  const body = document.querySelector('body')
+  const bodyWidth = body.getBoundingClientRect().width
+  
+  // hack to render popup sanely in tiling window system
+  const bodyHeight = body.getBoundingClientRect().height
+  const contentHeight = document.querySelector('.top').getBoundingClientRect().height +
+        document.querySelector('.bottom').getBoundingClientRect().height
+  if (bodyHeight > contentHeight + 200) {
+    body.style.paddingTop = `${(bodyHeight / 2 - contentHeight).toFixed(0)}px`
+  }
+
   const display = document.getElementById("word")
   display.style.visibility = 'hidden'
   display.innerHTML = buildWord("dummyword")
   const charWidth = display.querySelector('span').getBoundingClientRect().width
-  APPSTATE.offset = Math.floor((width / 3)  / charWidth)
+  APPSTATE.offset = Math.floor((bodyWidth / 3)  / charWidth)
   const pixelOffset = (charWidth / 2) + (charWidth * APPSTATE.offset)
   Array.from(document.querySelectorAll(".vert-bar")).forEach(bar => {
     bar.style.width = `${pixelOffset}px`
@@ -196,11 +205,6 @@ async function start() {
   await parse(APPSTATE.url)
   clearInterval(APPSTATE.intervalId)
   APPSTATE.intervalId = setInterval(blip, calculateInterval())
-//  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
-//    await parse(tabs[0].url)
-//    clearInterval(APPSTATE.intervalId)
-//    APPSTATE.intervalId = setInterval(blip, calculateInterval())
-//  })
 }
 
 function control(e) {
@@ -285,13 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
   decButton.addEventListener('click', adjustSpeed(-10))
   controlButton.addEventListener('click', control)
   chrome.storage.local.get(['wpm', 'url'], ( { wpm, url } ) => {
-    APPSTATE.wpm = wpm || 320
+    APPSTATE.wpm = Number(wpm) || 320
     APPSTATE.url = url
     renderInitial()
   })
 })
-
-// add background.js
-// inside, listen for ext icon click
-// on click, open window at center of screen
-// pass url of current page into the window
