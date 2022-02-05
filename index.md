@@ -8,3 +8,6 @@ You can adjust the words per minute speed on the fly and also set a default spee
 
 <img src="screenshot.png" alt="blip screenshot" width="800"/>
 
+## Privacy Policy
+
+This extension collects absolutely no user data.
